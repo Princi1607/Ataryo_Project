@@ -1,7 +1,8 @@
-import { create } from 'zustand';
-import axios from 'axios';
+import { create } from "zustand";
+import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 interface ContentState {
   content: any;
@@ -20,8 +21,8 @@ export const useContentStore = create<ContentState>((set, get) => ({
   content: null,
   loading: false,
   error: null,
-  token: localStorage.getItem('adminToken'),
-  isAuthenticated: !!localStorage.getItem('adminToken'),
+  token: localStorage.getItem("adminToken"),
+  isAuthenticated: !!localStorage.getItem("adminToken"),
 
   fetchContent: async () => {
     set({ loading: true, error: null });
@@ -29,26 +30,31 @@ export const useContentStore = create<ContentState>((set, get) => ({
       const response = await axios.get(`${API_BASE_URL}/content`);
       set({ content: response.data, loading: false });
     } catch (error: any) {
-      set({ error: error.response?.data?.message || 'Failed to fetch content', loading: false });
+      set({
+        error: error.response?.data?.message || "Failed to fetch content",
+        loading: false,
+      });
     }
   },
 
   updateContent: async (section: string, data: any) => {
     const { token } = get();
-    if (!token) throw new Error('Not authenticated');
+    if (!token) throw new Error("Not authenticated");
 
     try {
       const response = await axios.put(
         `${API_BASE_URL}/content/${section}`,
         data,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       set({ content: response.data });
       return response.data;
     } catch (error: any) {
-      set({ error: error.response?.data?.message || 'Failed to update content' });
+      set({
+        error: error.response?.data?.message || "Failed to update content",
+      });
       throw error;
     }
   },
@@ -57,30 +63,32 @@ export const useContentStore = create<ContentState>((set, get) => ({
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         email,
-        password
+        password,
       });
-      
+
       const { token } = response.data;
-      localStorage.setItem('adminToken', token);
+      localStorage.setItem("adminToken", token);
       set({ token, isAuthenticated: true, error: null });
       return true;
     } catch (error: any) {
-      set({ error: error.response?.data?.message || 'Login failed' });
+      set({ error: error.response?.data?.message || "Login failed" });
       return false;
     }
   },
 
   logout: () => {
-    localStorage.removeItem('adminToken');
-    set({ token: null, isAuthenticated: false });
+    localStorage.removeItem("adminToken");
+    set({ token: null, isAuthenticated: false, error: null });
+    // Optionally reload the page to reset all state
+    window.location.reload();
   },
 
   uploadImage: async (file: File) => {
     const { token } = get();
-    if (!token) throw new Error('Not authenticated');
+    if (!token) throw new Error("Not authenticated");
 
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append("image", file);
 
     try {
       const response = await axios.post(
@@ -89,13 +97,13 @@ export const useContentStore = create<ContentState>((set, get) => ({
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
       return response.data.url;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Upload failed');
+      throw new Error(error.response?.data?.message || "Upload failed");
     }
-  }
+  },
 }));
