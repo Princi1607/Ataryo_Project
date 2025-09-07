@@ -1,7 +1,20 @@
 import React from 'react';
 import { Target, Eye, Sparkles, Sprout } from 'lucide-react';
 
-const About: React.FC = () => {
+interface AboutProps {
+  content?: {
+    title: string;
+    description1: string;
+    description2: string;
+    mission: string;
+    vision: string;
+    image: string;
+    statValue: string;
+    statLabel: string;
+  };
+}
+
+const About: React.FC<AboutProps> = ({ content }) => {
   return (
     <section id="about" className="py-20 bg-gradient-to-br from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -10,17 +23,13 @@ const About: React.FC = () => {
           <div className="space-y-8">
             <div>
               <h2 className="text-4xl md:text-5xl font-bold text-[#0A5737] mb-6 leading-tight">
-                About Us
+                {content?.title || 'About Us'}
               </h2>
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                Ataryo is pioneering a new era of sustainable textiles. Every year, millions of tonnes 
-                of tree residuals, branches, bark, and foliage are discarded. We see them not as waste, 
-                but as raw materials for innovation.
+                {content?.description1 || 'Ataryo is pioneering a new era of sustainable textiles. Every year, millions of tonnes of tree residuals, branches, bark, and foliage are discarded. We see them not as waste, but as raw materials for innovation.'}
               </p>
               <p className="text-lg text-gray-700 leading-relaxed">
-                By transforming forestry by-products into premium fibers, fabrics, and applications, 
-                we are redefining what "sustainability" means for fashion, healthcare, interiors, 
-                and industries worldwide.
+                {content?.description2 || 'By transforming forestry by-products into premium fibers, fabrics, and applications, we are redefining what "sustainability" means for fashion, healthcare, interiors, and industries worldwide.'}
               </p>
             </div>
 
@@ -34,7 +43,7 @@ const About: React.FC = () => {
                   <h3 className="text-xl font-bold text-[#0A5737]">Our Mission</h3>
                 </div>
                 <p className="text-gray-700 leading-relaxed">
-                  Transforming tree residues and forestry waste into sustainable textile.
+                  {content?.mission || 'Transforming tree residues and forestry waste into sustainable textile.'}
                 </p>
               </div>
 
@@ -46,7 +55,7 @@ const About: React.FC = () => {
                   <h3 className="text-xl font-bold text-[#0A5737]">Our Vision</h3>
                 </div>
                 <p className="text-gray-700 leading-relaxed">
-                  A future where every textile is circular, responsible, and regenerative.
+                  {content?.vision || 'A future where every textile is circular, responsible, and regenerative.'}
                 </p>
               </div>
             </div>
@@ -56,7 +65,7 @@ const About: React.FC = () => {
           <div className="relative">
             <div className="relative overflow-hidden rounded-2xl shadow-2xl">
               <img
-                src="https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"
+                src={content?.image || "https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop"}
                 alt="Sustainable textile innovation"
                 className="w-full h-96 object-cover transform hover:scale-105 transition-transform duration-700"
               />
@@ -66,8 +75,8 @@ const About: React.FC = () => {
             {/* Floating Stats */}
             <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-xl shadow-xl border border-gray-100">
               <div className="text-center">
-                <div className="text-3xl font-bold text-[#0A5737]">100%</div>
-                <div className="text-sm text-gray-600">Waste-to-Value</div>
+                <div className="text-3xl font-bold text-[#0A5737]">{content?.statValue || '100%'}</div>
+                <div className="text-sm text-gray-600">{content?.statLabel || 'Waste-to-Value'}</div>
               </div>
             </div>
           </div>
