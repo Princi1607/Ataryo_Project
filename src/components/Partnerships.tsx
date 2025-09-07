@@ -31,7 +31,7 @@ const Partnerships: React.FC = () => {
             Partnerships & Collaborations
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            We're creating a new category of textiles — and we believe in doing it together.
+            We're creating a new category of textiles — and we believe in doing it together    by princi and chakri.
           </p>
         </div>
 
