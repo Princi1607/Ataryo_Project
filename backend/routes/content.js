@@ -1,96 +1,131 @@
-import express from 'express';
-import { Content } from '../models/Content.js';
-import { auth } from '../middleware/auth.js';
+// backend/routes/content.js
+import express from "express";
+import Content from "../models/Content.js";
+import { verifyToken } from "../middleware/authMiddleware.js";
+
+// Normalize legacy flat keys to the canonical nested structure used by the frontend
+const normalizeSectionData = (section, data) => {
+  if (!data || typeof data !== "object") return data;
+
+  const d = { ...data };
+  const pick = (...keys) => keys.find((k) => d[k] !== undefined);
+  const val = (k) => d[k];
+  const has = (k) => d[k] !== undefined;
+
+  if (section === "home") {
+    const hero = d.hero || {};
+    const heroTitleKey = pick("HeroTitle", "heroTitle", "title");
+    const heroSubtitleKey = pick("HeroSubtitle", "heroSubtitle", "subtitle");
+    const heroDescKey = pick("HeroDescription", "heroDescription", "description");
+    const heroImgKey = pick("HeroImage", "heroImage", "backgroundImage");
+    if (heroTitleKey || heroSubtitleKey || heroDescKey || heroImgKey) {
+      d.hero = {
+        ...hero,
+        ...(heroTitleKey ? { title: val(heroTitleKey) } : {}),
+        ...(heroSubtitleKey ? { subtitle: val(heroSubtitleKey) } : {}),
+        ...(heroDescKey ? { description: val(heroDescKey) } : {}),
+        ...(heroImgKey ? { backgroundImage: val(heroImgKey) } : {}),
+      };
+    }
+
+    const about = d.about || {};
+    const aboutTitleKey = pick("AboutTitle", "aboutTitle");
+    const aboutTextKey = pick("AboutText", "aboutText", "text");
+    const aboutImageKey = pick("AboutImage", "aboutImage", "image");
+    if (aboutTitleKey || aboutTextKey || aboutImageKey) {
+      d.about = {
+        ...about,
+        ...(aboutTitleKey ? { title: val(aboutTitleKey) } : {}),
+        ...(aboutTextKey ? { text: val(aboutTextKey) } : {}),
+        ...(aboutImageKey ? { image: val(aboutImageKey) } : {}),
+      };
+    }
+  }
+
+  if (section === "textile") {
+    // Legacy flat structure → hero/about
+    if (!d.hero && (has("title") || has("subtitle") || has("backgroundImage") || has("HeroTitle") || has("HeroSubtitle") || has("HeroImage"))) {
+      d.hero = {
+        ...(pick("HeroTitle", "title") ? { title: val(pick("HeroTitle", "title")) } : {}),
+        ...(pick("HeroSubtitle", "subtitle") ? { subtitle: val(pick("HeroSubtitle", "subtitle")) } : {}),
+        ...(pick("HeroImage", "backgroundImage") ? { backgroundImage: val(pick("HeroImage", "backgroundImage")) } : {}),
+      };
+    }
+    if (!d.about && (has("AboutTitle") || has("AboutText") || has("AboutImage") || has("text") || has("image"))) {
+      d.about = {
+        ...(pick("AboutTitle") ? { title: val("AboutTitle") } : {}),
+        ...(pick("AboutText", "text") ? { text: val(pick("AboutText", "text")) } : {}),
+        ...(pick("AboutImage", "image") ? { image: val(pick("AboutImage", "image")) } : {}),
+      };
+    }
+  }
+
+  if (section === "spasticity") {
+    if (d.about && d.about.text && !d.about.description) {
+      d.about = { ...d.about, description: d.about.text };
+      delete d.about.text;
+    }
+    if (d.innovation && d.innovation.bullets && !d.innovation.items) {
+      d.innovation = {
+        title: d.innovation.title,
+        items: d.innovation.bullets.map((b) => ({ name: b, description: "" })),
+      };
+    }
+    if (d.whoItHelps && d.whoItHelps.groups && !d.whoItHelps.people) {
+      d.whoItHelps = {
+        title: d.whoItHelps.title,
+        people: d.whoItHelps.groups.map((g) => ({ name: g, role: "" })),
+      };
+    }
+    if (d.press && d.press.items && !d.press.articles) {
+      d.press = {
+        title: d.press.title,
+        articles: d.press.items.map((it) => ({ headline: it.title || it.headline || "", link: it.link || "" })),
+      };
+    }
+  }
+
+  return d;
+};
 
 const router = express.Router();
 
-// Get all content (public)
-router.get('/', async (req, res) => {
+// ✅ GET content by section
+router.get("/:section", async (req, res) => {
   try {
-    let content = await Content.findOne();
-    
+    const section = req.params.section;
+    const content = await Content.findOne({ section });
     if (!content) {
-      // Create default content if none exists
-      content = new Content({
-        hero: {
-          title: 'Reclaiming Nature.',
-          subtitle: 'Reinventing Textiles.',
-          description: 'From forestry waste to future-ready fibers — Ataryo transforms natural by-products of tree residues and forestry waste into sustainable, high-performance textiles for a regenerative tomorrow.',
-          backgroundImage: 'https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop',
-          ctaText1: 'Explore Textiles',
-          ctaText2: 'Partner With Us'
-        },
-        about: {
-          title: 'About Us',
-          description1: 'Ataryo is pioneering a new era of sustainable textiles.',
-          description2: 'By transforming forestry by-products into premium fibers.',
-          mission: 'Transforming tree residues and forestry waste into sustainable textile.',
-          vision: 'A future where every textile is circular, responsible, and regenerative.',
-          image: 'https://images.pexels.com/photos/1108572/pexels-photo-1108572.jpeg',
-          statValue: '100%',
-          statLabel: 'Waste-to-Value'
-        },
-        contact: {
-          title: 'Contact Us',
-          subtitle: 'Ready to transform your textile needs?',
-          description: 'Get in touch with our team.',
-          email: 'hello@ataryo.com',
-          phone: '+1 (555) 123-4567',
-          address: '123 Sustainability Street, Green City, GC 12345',
-          socialLinks: {}
-        }
-      });
-      await content.save();
+      return res.status(404).json({ message: "Section not found" });
     }
-    
-    res.json(content);
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+    const normalized = {
+      ...content.toObject(),
+      data: normalizeSectionData(section, content.data),
+    };
+    res.json(normalized);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message });
   }
 });
 
-// Update content (admin only)
-router.put('/', auth, async (req, res) => {
+// ✅ PUT update (create if missing)
+router.put("/:section", verifyToken, async (req, res) => {
   try {
-    let content = await Content.findOne();
-    
-    if (!content) {
-      content = new Content(req.body);
-    } else {
-      // Update existing content
-      Object.keys(req.body).forEach(key => {
-        if (req.body[key] !== undefined) {
-          content[key] = req.body[key];
-        }
-      });
-    }
-    
-    await content.save();
-    res.json(content);
+    const section = req.params.section;
+    const dataRaw = req.body?.data && typeof req.body.data === "object" ? req.body.data : req.body;
+    const data = normalizeSectionData(section, dataRaw);
+    const updated = await Content.findOneAndUpdate(
+      { section },
+      { section, data },
+      { new: true, upsert: true }
+    );
+    res.json({ section: updated.section, data: updated.data });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Update specific section
-router.put('/:section', auth, async (req, res) => {
-  try {
-    const { section } = req.params;
-    let content = await Content.findOne();
-    
-    if (!content) {
-      return res.status(404).json({ message: 'Content not found' });
-    }
-    
-    content[section] = { ...content[section], ...req.body };
-    await content.save();
-    
-    res.json(content);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message });
   }
 });
 

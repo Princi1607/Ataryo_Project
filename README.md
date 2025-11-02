@@ -52,9 +52,8 @@ A modern, full-stack web application for Ataryo, a sustainable textiles company.
 - Express.js
 - MongoDB with Mongoose
 - JWT Authentication
-- Cloudinary (Image Storage)
 - Multer (File Upload)
-- CORS enabled
+- CORS configuration
 
 ## 📋 Quick Start
 
@@ -62,7 +61,6 @@ A modern, full-stack web application for Ataryo, a sustainable textiles company.
 
 - Node.js (v18+)
 - MongoDB (local or Atlas)
-- Cloudinary account (for image uploads)
 
 ### Installation
 
@@ -70,13 +68,13 @@ A modern, full-stack web application for Ataryo, a sustainable textiles company.
 
    ```bash
    git clone <repository-url>
-   cd ataryo-project
+   cd Ataryo_Project
    ```
 
 2. **Install dependencies**
 
    ```bash
-   # Frontend dependencies
+   # Frontend dependencies (repo root)
    npm install
 
    # Backend dependencies
@@ -86,20 +84,21 @@ A modern, full-stack web application for Ataryo, a sustainable textiles company.
 
 3. **Set up environment variables**
 
-   Backend `.env`:
+   Backend env (copy `backend/env.example` to `backend/.env`):
 
    ```env
-   MONGODB_URI=mongodb://localhost:27017/ataryo
-   JWT_SECRET=your_jwt_secret_here
+   MONGO_URI=mongodb://localhost:27017/ataryo
+   JWT_SECRET=change-this-secret
+   CORS_ORIGIN=http://localhost:5173
+   SEED_ADMIN=true
    ADMIN_EMAIL=admin@ataryo.com
    ADMIN_PASSWORD=admin123
-   CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-   CLOUDINARY_API_KEY=your_cloudinary_api_key
-   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
    PORT=5000
+   # set to true in production if serving frontend from backend
+   SERVE_CLIENT=false
    ```
 
-   Frontend `.env`:
+   Frontend env (copy `frontend.env.example` to `.env` at repo root):
 
    ```env
    VITE_API_BASE_URL=http://localhost:5000/api
@@ -112,31 +111,25 @@ A modern, full-stack web application for Ataryo, a sustainable textiles company.
    cd backend
    npm run dev
 
-   # Terminal 2 - Frontend
+   # Terminal 2 - Frontend (repo root)
    npm run dev
    ```
 
-5. **Create admin user**
-
-   ```bash
-   curl -X POST http://localhost:5000/api/auth/create-admin
-   ```
-
-6. **Access the application**
+5. **Access the application**
    - Website: http://localhost:5173
-   - Admin Login: Click "Admin" button (admin@ataryo.com / admin123)
+   - Admin Login: Use the seeded admin (admin@ataryo.com / admin123)
 
 ## 📚 Detailed Setup
 
-For comprehensive setup instructions, deployment guides, and troubleshooting, see [SETUP.md](./SETUP.md).
+For comprehensive setup instructions, deployment guides, and troubleshooting, see SETUP section below.
 
 ## 🎯 Admin Panel Usage
 
-1. **Login**: Click "Admin" in the top-right corner
-2. **Navigate**: Use the sidebar to switch between content sections
+1. **Login**: Navigate to /admin after logging in via your UI
+2. **Navigate**: Use the admin navbar to switch between sections
 3. **Edit Content**: Modify text fields, upload images, manage lists
-4. **Save Changes**: Click "Save Changes" to persist updates
-5. **Preview**: Changes appear immediately on the main website
+4. **Save Changes**: Click save to persist updates
+5. **Preview**: Changes appear immediately on the site
 
 ### Editable Content Sections
 
@@ -150,25 +143,20 @@ For comprehensive setup instructions, deployment guides, and troubleshooting, se
 
 ## 🔧 API Documentation
 
-### Authentication Endpoints
-
+### Authentication
 - `POST /api/auth/login` - Admin login
-- `GET /api/auth/verify` - Verify JWT token
-- `POST /api/auth/create-admin` - Create admin user
 
-### Content Management
-
-- `GET /api/content` - Fetch all content (public)
-- `PUT /api/content/:section` - Update specific section (admin only)
+### Content
+- `GET /api/content/:section` - Fetch a specific section
+- `PUT /api/content/:section` - Update a specific section (requires Bearer token)
 
 ### File Upload
-
-- `POST /api/upload/image` - Upload image to Cloudinary (admin only)
+- `POST /api/upload/image` - Upload image (requires Bearer token)
 
 ## 🏗️ Project Structure
 
 ```
-ataryo-project/
+Ataryo_Project/
 ├── backend/                 # Node.js API server
 │   ├── models/             # MongoDB schemas
 │   ├── routes/             # API routes
@@ -176,44 +164,29 @@ ataryo-project/
 │   └── server.js           # Express server
 ├── src/                    # React frontend
 │   ├── components/         # React components
-│   ├── store/             # Zustand state management
-│   └── App.tsx            # Main app component
-├── public/                # Static assets
-└── README.md              # This file
+│   ├── store/              # Zustand state management
+│   └── App.tsx             # Main app component
+├── public/                 # Static assets
+└── README.md               # This file
 ```
 
 ## 🚀 Deployment
 
-### Backend Deployment
+### Option A: Frontend and Backend on separate hosts
+1. Deploy backend (Railway/Render/DigitalOcean). Set env vars and `CORS_ORIGIN` to your frontend URL.
+2. Deploy frontend (Netlify/Vercel). Set `VITE_API_BASE_URL` to your backend URL + `/api`.
 
-1. Set up MongoDB Atlas or dedicated MongoDB server
-2. Configure environment variables for production
-3. Deploy to services like Railway, Heroku, or DigitalOcean
-4. Set up proper CORS origins
+### Option B: Serve frontend from backend
+1. Build frontend at repo root: `npm run build` (generates `dist/`)
+2. Move or ensure `dist/` is at repo root (as Vite does)
+3. In backend `.env`, set `SERVE_CLIENT=true`
+4. Start backend: `npm start` (it will serve `../dist/index.html` for all non-API routes)
 
-### Frontend Deployment
-
-1. Update `VITE_API_BASE_URL` to production backend URL
-2. Build: `npm run build`
-3. Deploy `dist/` folder to Netlify, Vercel, or similar
-
-## 🔒 Security Features
-
+## 🔒 Security
 - JWT-based authentication
 - Protected admin routes
-- Input validation and sanitization
-- Secure file upload with type checking
-- CORS configuration
-- Environment variable protection
-
-## 🎨 Design System
-
-The website follows Ataryo's brand guidelines:
-
-- **Primary Colors**: Green palette (#0A5737, #067141, #00A651)
-- **Accent Colors**: Light greens (#85B642, #A6CE39)
-- **Typography**: Clean, modern fonts with proper hierarchy
-- **Layout**: Responsive grid system with mobile-first approach
+- Basic input validation
+- CORS configuration via `CORS_ORIGIN`
 
 ## 🤝 Contributing
 
@@ -229,13 +202,6 @@ This project is proprietary software for Ataryo. All rights reserved.
 
 ## 🆘 Support
 
-For technical support or questions:
-
-- Check the [SETUP.md](./SETUP.md) guide
 - Review API documentation above
-- Check browser developer tools for frontend issues
+- Check browser devtools for frontend issues
 - Review server logs for backend issues
-
----
-
-**Built with ❤️ for sustainable textiles and a better future.**

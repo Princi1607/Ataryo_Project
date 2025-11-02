@@ -1,0 +1,55 @@
+src/
+│
+├── components/
+│   ├── common/
+│   │   ├── ImageManager.tsx          # Shared image upload component
+│   │   ├── AdminLogin.tsx
+│   │   ├── AdminPanel.tsx
+│   │   ├── RichTextEditor.tsx        # (optional for WYSIWYG)
+│   │
+│   ├── home/                         # Components used ONLY in HomePage
+│   │   ├── HomeNavbar.tsx
+│   │   ├── HomeHero.tsx
+│   │   ├── About.tsx
+│   │   ├── CoreValues.tsx
+│   │   ├── WhyWeExist.tsx
+│   │   ├── Partnerships.tsx
+│   │   ├── Investment.tsx
+│   │   ├── Team.tsx
+│   │   ├── Contact.tsx
+│   │   └── HomeFooter.tsx
+│   │
+│   ├── textile/                      # Components used ONLY in TextilePage
+│   │   ├── TextileNavbar.tsx
+│   │   ├── TextileHero.tsx
+│   │   ├── AboutTextile.tsx
+│   │   ├── Products.tsx
+│   │   ├── Sustainability.tsx
+│   │   ├── Research.tsx
+│   │   ├── Press.tsx
+│   │   └── TextileFooter.tsx
+│   │
+│   ├── spasticity/                   # Components used ONLY in SpasticityPage
+│   │   ├── SpasticityNavbar.tsx
+│   │   ├── SpasticityHero.tsx
+│   │   ├── AboutSpasticity.tsx
+│   │   ├── Innovation.tsx
+│   │   ├── WhoItHelps.tsx
+│   │   ├── Research.tsx
+│   │   ├── Press.tsx
+│   │   └── SpasticityFooter.tsx
+│
+├── pages/
+│   ├── HomePage.tsx
+│   ├── TextilePage.tsx
+│   └── SpasticityPage.tsx
+│
+├── store/
+│   ├── contentStore.ts               # Zustand state (you already have this)
+│   └── usePageContent.ts             # optional — modular hook for per-page content
+│
+├── App.tsx
+├── main.tsx
+├── index.css
+│
+└── vite-env.d.ts
